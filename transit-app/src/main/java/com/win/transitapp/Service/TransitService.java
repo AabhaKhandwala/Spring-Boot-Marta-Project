@@ -12,8 +12,10 @@ import com.win.transitapp.Model.DistanceResponse;
 import com.win.transitapp.Model.GeocodingResponse;
 import com.win.transitapp.Model.Location;
 
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -33,7 +35,20 @@ public class TransitService {
     private List<Bus> getBuses() {
         RestTemplate restTemplate = new RestTemplate();
         Bus[] buses = restTemplate.getForObject(transitUrl, Bus[].class);
+
+        try {
+            if (buses == null && buses.length != 0)
+
+                return Arrays.asList(buses);
+
+        } catch (HttpClientErrorException ex) {
+            Response response = new Response();
+            response.setMessage("error");
+            // return Arrays.asList(buses);
+
+        }
         return Arrays.asList(buses);
+
     }
 
     private Location getCoordinates(String description) {
@@ -55,6 +70,7 @@ public class TransitService {
     public List<Bus> getNearbyBuses(BusRequest request) {
         List<Bus> allBuses = this.getBuses();
         Location personLocation = this.getCoordinates(request.address + " " + request.city);
+        // System.out.println(personLocation);
         List<Bus> nearbyBuses = new ArrayList<>();
         for (Bus bus : allBuses) {
             Location busLocation = new Location();
